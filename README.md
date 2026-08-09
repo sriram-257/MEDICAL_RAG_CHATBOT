@@ -1,6 +1,8 @@
 # 🏥 Medical RAG Chatbot
 
-A specialized medical Question-Answering chatbot built using the **MedQuAD dataset**. The system uses semantic retrieval with **Sentence Transformers and FAISS** to retrieve relevant medical information and provides a simple interactive interface using **Streamlit**.
+A specialized medical Question-Answering chatbot built using the **MedQuAD dataset**.
+
+The system uses **Sentence Transformers and FAISS** for semantic retrieval of relevant medical information and provides an interactive web interface using **Streamlit**.
 
 The project also includes basic **medical entity recognition** for identifying diseases, symptoms, treatments, and medications from user queries and retrieved medical information.
 
@@ -8,22 +10,13 @@ The project also includes basic **medical entity recognition** for identifying d
 
 ## 📌 Project Overview
 
-This project was developed as a Medical Q&A chatbot using the MedQuAD dataset.
+This project implements a retrieval-based Medical Q&A chatbot using the **MedQuAD dataset**.
 
-The system follows a retrieval-based approach rather than generating unsupported medical information. A user's question is converted into a semantic embedding and compared against pre-computed embeddings of medical questions stored in a FAISS index.
+Instead of generating unsupported medical information, the system retrieves relevant answers from the MedQuAD knowledge base.
 
-The most relevant medical Q&A pairs are retrieved and presented through the Streamlit interface.
+The user's question is converted into a semantic embedding using a Sentence Transformer model. The embedding is then compared against the medical question embeddings using FAISS similarity search.
 
-### Main Components
-
-- MedQuAD medical Q&A dataset
-- Sentence Transformer embeddings
-- FAISS similarity search
-- Semantic retrieval
-- TF-IDF retrieval
-- Medical entity extraction
-- Streamlit user interface
-- Cached embeddings and FAISS index
+The most relevant medical Q&A pairs are retrieved and displayed through the Streamlit interface.
 
 ---
 
@@ -35,47 +28,46 @@ User questions are converted into vector embeddings using:
 
 `all-MiniLM-L6-v2`
 
-The embeddings are compared using FAISS similarity search to find semantically related medical questions.
+The embeddings are normalized and searched using FAISS similarity search to identify semantically related medical questions.
 
 ### 🧠 FAISS Vector Search
 
-The project uses a FAISS `IndexFlatIP` index with normalized embeddings.
+The project uses:
 
-This allows efficient similarity-based retrieval across the MedQuAD dataset.
+`faiss.IndexFlatIP`
+
+with normalized embeddings for similarity-based retrieval across the MedQuAD dataset.
 
 ### 🏥 Medical Q&A
 
-The chatbot retrieves relevant answers from the MedQuAD knowledge base.
+The chatbot retrieves relevant medical answers directly from the MedQuAD knowledge base.
 
-The system does not depend on a generative LLM to invent medical answers.
+The retrieval system does not use a generative LLM to invent medical answers.
 
 ### 🧬 Medical Entity Recognition
 
-The application identifies basic medical entities such as:
+The application performs basic medical entity extraction for:
 
 - Diseases
 - Symptoms
 - Treatments
 - Medications
 
-These entities are displayed in the Streamlit interface.
+The detected entities are displayed in the Streamlit interface.
 
 ### 📊 Retrieval Results
 
-The application can display retrieved medical questions and their similarity scores, allowing the retrieval process to be inspected.
+The system can display retrieved medical questions and similarity scores, making the retrieval process more transparent.
 
 ### 💻 Streamlit Interface
 
-The project provides a simple web interface where users can enter medical questions and receive retrieved medical information.
+A simple interactive web interface allows users to enter medical questions and receive relevant information from the knowledge base.
 
 ### ⚡ Cached Semantic Index
 
-The project stores pre-computed:
+The application supports cached question embeddings and a FAISS index.
 
-- Question embeddings
-- FAISS index
-
-This prevents the application from regenerating all 14,979 embeddings every time it starts.
+This avoids regenerating all **14,979 question embeddings** every time the application starts.
 
 ---
 
@@ -86,7 +78,7 @@ This prevents the application from regenerating all 14,979 embeddings every time
                      │
                      ▼
             ┌─────────────────┐
-            │ Streamlit UI    │
+            │  Streamlit UI   │
             └────────┬────────┘
                      │
                      ▼
@@ -115,12 +107,12 @@ This prevents the application from regenerating all 14,979 embeddings every time
           │                     │
           ▼                     ▼
  ┌─────────────────┐   ┌──────────────────┐
- │ Medical Answer │   │ Entity Extraction │
+ │ Medical Answer  │   │ Entity Extraction│
  └─────────────────┘   └──────────────────┘
           │                     │
           └──────────┬──────────┘
                      ▼
               ┌─────────────┐
-              │ Streamlit   │
-              │ Response    │
+              │  Streamlit  │
+              │  Response   │
               └─────────────┘
