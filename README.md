@@ -1,6 +1,4 @@
-Absolutely. Use this as your **final `README.md`**. It is cleaned up, professional, and aligned with what your current project actually implements.
 
-````markdown
 # 🏥 Medical RAG Chatbot
 
 A specialized medical Question-Answering chatbot built using the **MedQuAD dataset**.
@@ -23,7 +21,6 @@ The resulting embedding is compared against medical question embeddings using **
 
 The most relevant medical Q&A pairs are then retrieved and displayed through the Streamlit interface.
 
----
 
 ## ✨ Features
 
