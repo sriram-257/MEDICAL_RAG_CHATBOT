@@ -1,4 +1,3 @@
-
 # 🏥 Medical RAG Chatbot
 
 A specialized medical Question-Answering chatbot built using the **MedQuAD dataset**.
@@ -21,6 +20,7 @@ The resulting embedding is compared against medical question embeddings using **
 
 The most relevant medical Q&A pairs are then retrieved and displayed through the Streamlit interface.
 
+---
 
 ## ✨ Features
 
@@ -85,7 +85,7 @@ can be classified as:
 Symptoms
 ```
 
-This helps provide additional context about the user's query.
+This provides additional context about the user's question.
 
 ---
 
@@ -106,16 +106,38 @@ This makes the retrieval process more transparent.
 
 ### 💻 Streamlit Interface
 
-A simple interactive web interface allows users to:
+The interactive web interface allows users to:
 
 * Ask medical questions
 * View retrieved answers
-* View retrieval confidence
+* View similarity/confidence scores
 * View detected entities
 * View detected intent
 * Inspect other relevant matches
 * Maintain conversation history
 * Clear the conversation
+
+---
+
+### ⚡ Cached Semantic Index
+
+The project includes pre-computed semantic retrieval files:
+
+```text
+data/index/embeddings.npy
+data/index/medquad.faiss
+```
+
+These files contain the question embeddings and FAISS vector index generated for the processed MedQuAD dataset.
+
+Therefore, the application can load the existing semantic index instead of regenerating all question embeddings every time it starts.
+
+The current cached index contains:
+
+```text
+14,979 vectors
+384 dimensions
+```
 
 ---
 
@@ -175,8 +197,8 @@ A simple interactive web interface allows users to:
                                 │
                                 ▼
                        ┌─────────────────┐
-                       │  Streamlit      │
-                       │  Response       │
+                       │   Streamlit     │
+                       │    Response     │
                        └─────────────────┘
 ```
 
@@ -187,6 +209,14 @@ A simple interactive web interface allows users to:
 ```text
 MEDICAL_RAG_CHATBOT/
 │
+├── data/
+│   ├── index/
+│   │   ├── embeddings.npy
+│   │   └── medquad.faiss
+│   │
+│   └── processed/
+│       └── medquad.csv
+│
 ├── src/
 │   ├── app.py
 │   ├── chatbot.py
@@ -196,16 +226,26 @@ MEDICAL_RAG_CHATBOT/
 │   ├── semantic_retriever.py
 │   └── tfidf_retriever.py
 │
-├── data/
-│   └── processed/
-│       └── medquad.csv
-│
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
 
-> The complete MedQuAD source dataset and large generated embedding/index files may be kept locally and excluded from GitHub when they exceed repository size limits.
+### Important Data Files
+
+#### `data/processed/medquad.csv`
+
+Processed MedQuAD question-answer dataset used by the application.
+
+#### `data/index/embeddings.npy`
+
+Pre-computed Sentence Transformer embeddings for the MedQuAD questions.
+
+#### `data/index/medquad.faiss`
+
+FAISS vector index containing the pre-computed question embeddings.
+
+These cached files allow the application to start without regenerating all 14,979 question embeddings.
 
 ---
 
@@ -229,7 +269,7 @@ The application expects the processed dataset at:
 data/processed/medquad.csv
 ```
 
-The dataset provides medical questions and corresponding answers collected from trusted medical information sources.
+The dataset provides medical questions and corresponding answers collected from medical information sources.
 
 ---
 
@@ -243,6 +283,7 @@ The dataset provides medical questions and corresponding answers collected from 
 | Scikit-learn          | TF-IDF retrieval                    |
 | Sentence Transformers | Semantic embeddings                 |
 | FAISS                 | Vector similarity search            |
+| spaCy                 | Basic medical entity processing     |
 | Streamlit             | Interactive web interface           |
 | MedQuAD               | Medical Q&A knowledge base          |
 
@@ -272,37 +313,44 @@ The model converts medical questions into numerical vector representations.
 
 ---
 
-## Step 3 — Generate Question Embeddings
+## Step 3 — Load Cached Embeddings
 
-Each MedQuAD question is converted into a semantic embedding.
-
-The model produces:
+The application checks whether pre-computed embeddings are available.
 
 ```text
-384-dimensional embeddings
+data/index/embeddings.npy
 ```
 
-for the questions.
+If available, the existing embeddings are loaded.
+
+The cached embeddings have:
+
+```text
+14,979 questions
+384 dimensions
+```
 
 ---
 
-## Step 4 — Normalize Embeddings
+## Step 4 — Load Cached FAISS Index
 
-The embeddings are normalized before similarity search.
+The application loads:
+
+```text
+data/index/medquad.faiss
+```
+
+The FAISS index contains the pre-computed question vectors.
+
+This avoids rebuilding the complete vector index during normal application startup.
+
+---
+
+## Step 5 — Normalize Embeddings
+
+The question embeddings are normalized before similarity search.
 
 This allows inner-product similarity to be used effectively for semantic retrieval.
-
----
-
-## Step 5 — FAISS Similarity Search
-
-The project uses:
-
-```python
-faiss.IndexFlatIP
-```
-
-to search for the most semantically similar medical questions.
 
 ---
 
@@ -347,9 +395,36 @@ Medications
 
 ---
 
-## Step 10 — Display the Answer
+## Step 10 — Detect Query Intent
 
-The best relevant MedQuAD answer is displayed through the Streamlit interface.
+The application performs basic intent detection.
+
+Example:
+
+```text
+What are the symptoms of diabetes?
+```
+
+Intent:
+
+```text
+Symptoms
+```
+
+Possible categories include:
+
+```text
+Symptoms
+Treatment
+Medication
+Disease
+```
+
+---
+
+## Step 11 — Display the Answer
+
+The best relevant MedQuAD answer is displayed through the Streamlit interface along with retrieval information and detected medical entities.
 
 ---
 
@@ -369,7 +444,7 @@ Uses:
 
 ```text
 Sentence Transformers
-+
+        +
 FAISS
 ```
 
@@ -419,7 +494,7 @@ Intent:
 Symptoms
 ```
 
-Other supported medical intents can include categories such as:
+Other supported medical intents can include:
 
 ```text
 Symptoms
@@ -432,6 +507,44 @@ depending on the query and entity extraction logic.
 
 ---
 
+# 🧬 Medical Entity Recognition
+
+The application performs basic medical entity extraction.
+
+The system identifies categories including:
+
+```text
+Diseases
+Symptoms
+Treatments
+Medications
+```
+
+The detected entities are displayed in separate sections within the Streamlit interface.
+
+Example:
+
+```text
+Diseases:
+• Diabetes
+• High Blood Pressure
+
+Symptoms:
+• Fatigue
+• Swelling
+
+Treatments:
+• Exercise
+• Diet
+
+Medications:
+• Insulin
+```
+
+The entity extraction is intended for basic demonstration purposes and is not a clinical-grade medical NER system.
+
+---
+
 # 🖥️ Streamlit Interface
 
 The application provides a simple medical Q&A interface.
@@ -439,8 +552,8 @@ The application provides a simple medical Q&A interface.
 The interface includes:
 
 * Medical question input
-* Retrieved answer
-* Match confidence score
+* Retrieved medical answer
+* Similarity score
 * Matched MedQuAD question
 * Intent detection
 * Disease detection
@@ -488,25 +601,37 @@ Activate the environment:
 
 ## 3. Install Dependencies
 
+Install the required Python packages:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-# 📦 Dataset Setup
+# 📦 Dataset and Cached Index Setup
 
-Download the MedQuAD dataset from:
+The repository contains the processed dataset and pre-computed semantic index:
+
+```text
+data/
+├── index/
+│   ├── embeddings.npy
+│   └── medquad.faiss
+│
+└── processed/
+    └── medquad.csv
+```
+
+Therefore, **embedding generation is not required for normal execution**.
+
+The application loads the existing cached embeddings and FAISS index when they are available.
+
+If the processed dataset needs to be recreated in a fresh setup, the original MedQuAD dataset can be obtained from:
 
 [https://github.com/abachaa/MedQuAD](https://github.com/abachaa/MedQuAD)
 
-Prepare the processed dataset so that the following file exists:
-
-```text
-data/processed/medquad.csv
-```
-
-If the processed dataset has not yet been created, run the project's data preparation script:
+The data preparation script is:
 
 ```bash
 python src/data_loader.py
@@ -534,7 +659,7 @@ http://localhost:8501
 
 # 🧪 Testing
 
-The chatbot can be tested using questions such as:
+The chatbot can be tested using questions such as the following.
 
 ## Test 1 — Symptoms
 
@@ -581,6 +706,18 @@ Expected behavior:
 
 ---
 
+## Test 4 — Out-of-Domain Question
+
+```text
+What is the capital of France?
+```
+
+Expected behavior:
+
+The chatbot should recognize that the question is not a suitable medical query and avoid presenting unrelated medical information.
+
+---
+
 # 📊 Retrieval Configuration
 
 Current semantic retrieval configuration:
@@ -615,11 +752,41 @@ Default Similarity Threshold:
 
 # ⚡ Performance
 
-The Sentence Transformer model generates embeddings for the medical questions used by the semantic retriever.
+The project uses pre-computed question embeddings and a FAISS index.
 
-Because embedding generation can take time on the first run, the Streamlit application uses resource caching for the retriever.
+Cached files:
 
-This prevents the retriever object from being unnecessarily recreated during normal Streamlit interactions.
+```text
+data/index/embeddings.npy
+data/index/medquad.faiss
+```
+
+The application loads these files when available.
+
+This avoids regenerating embeddings for all 14,979 MedQuAD questions every time the application starts.
+
+Only the new user query needs to be converted into an embedding during semantic search.
+
+This significantly reduces startup time compared with rebuilding the entire semantic index.
+
+---
+
+# 🔐 Repository and Data Management
+
+The repository contains the files required for normal execution:
+
+```text
+src/
+data/processed/medquad.csv
+data/index/embeddings.npy
+data/index/medquad.faiss
+requirements.txt
+README.md
+```
+
+Development and environment-specific files such as the Python virtual environment and cache files should not be committed.
+
+The `.gitignore` file is used to prevent unnecessary local files from being added to the repository.
 
 ---
 
@@ -654,6 +821,7 @@ The current system has several limitations:
 7. The system does not diagnose medical conditions.
 8. The system does not provide personalized treatment plans.
 9. Retrieved information should be verified with qualified healthcare professionals.
+10. The system is not intended for emergency medical decision-making.
 
 ---
 
@@ -675,6 +843,7 @@ Possible future improvements include:
 * Improved conversational context
 * Larger medical knowledge bases
 * Better retrieval evaluation and benchmarking
+* Improved medical safety filtering
 
 ---
 
@@ -715,6 +884,42 @@ The project demonstrates practical implementation of:
 
 ---
 
+# 📁 Main Project Files
+
+### `src/app.py`
+
+Main Streamlit application and user interface.
+
+### `src/chatbot.py`
+
+Medical chatbot logic and response handling.
+
+### `src/semantic_retriever.py`
+
+Sentence Transformer-based semantic retrieval and FAISS search.
+
+### `src/tfidf_retriever.py`
+
+TF-IDF-based keyword retrieval.
+
+### `src/entity_extractor.py`
+
+Basic medical entity extraction.
+
+### `src/data_loader.py`
+
+Dataset loading and preprocessing utilities.
+
+### `src/dataset_analysis.py`
+
+Dataset analysis utilities.
+
+### `requirements.txt`
+
+Python dependencies required to run the project.
+
+---
+
 # 👨‍💻 Author
 
 **Sri Ram Koduru**
@@ -726,13 +931,44 @@ Specialization in Artificial Intelligence & Machine Learning
 
 # 📄 Dataset Attribution
 
-This project uses the MedQuAD dataset for educational and academic purposes.
+This project uses the **MedQuAD dataset** for educational and academic purposes.
 
 Dataset repository:
 
 [https://github.com/abachaa/MedQuAD](https://github.com/abachaa/MedQuAD)
 
-Please refer to the original dataset repository for dataset information, authorship, and licensing details.
+Please refer to the original MedQuAD repository for dataset information, authorship, and licensing details.
 
+---
+
+## ⭐ Project Highlights
+
+This project demonstrates a complete retrieval-based medical chatbot pipeline:
+
+```text
+Medical Dataset
+      ↓
+Data Preprocessing
+      ↓
+Question Embeddings
+      ↓
+FAISS Vector Index
+      ↓
+User Query
+      ↓
+Semantic Retrieval
+      ↓
+Relevance Filtering
+      ↓
+Medical Entity Extraction
+      ↓
+Intent Detection
+      ↓
+Retrieved Medical Answer
+      ↓
+Streamlit Interface
 ```
+
+The application is designed to provide **retrieval-based medical information rather than generating unsupported medical responses**.
+
 ```
